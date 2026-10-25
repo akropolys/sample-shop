@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simple Shop</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/shop.js"></script>
+</head>
+<body>
+  <header>
+    <div><a class="brand" href="/">Simple Shop</a><span class="muted"> A little demo store</span></div>
+    <nav aria-label="Main"><a href="#account">Account</a><a href="/admin.html">Admin / CMS</a></nav>
+  </header>
+  <main>
+    <div id="message" class="notice" role="status" hidden></div>
+    <div class="intro"><h1>Everyday things.</h1><p>Pick something, add it to your cart, and check out.</p></div>
+    <div class="shop-layout">
+      <section aria-labelledby="products-heading">
+        <h2 id="products-heading">Products</h2>
+        <div id="products" class="products"><p>Loading products…</p></div>
+      </section>
+      <aside class="panel cart" aria-labelledby="cart-heading">
+        <h2 id="cart-heading">Your cart <span id="cart-count" class="muted">(0)</span></h2>
+        <div id="cart-items"></div>
+        <div class="total"><span>Total</span><strong id="cart-total">$0.00</strong></div>
+        <p id="checkout-identity" class="muted small">Checking out as guest</p>
+        <button id="checkout" class="primary full" disabled>Checkout with Stripe</button>
+        <p id="stripe-note" class="muted small"></p>
+      </aside>
+    </div>
+    <section id="account" class="panel account" aria-labelledby="account-heading">
+      <h2 id="account-heading">Your account</h2>
+      <p id="identity">Guest</p>
+      <div id="auth-area">
+        <div class="actions"><button id="show-login" aria-pressed="true">Sign in</button><button id="show-register" aria-pressed="false">Create account</button></div>
+        <form id="auth-form" class="form narrow">
+          <label id="name-field" hidden>Name<input name="name" maxlength="80" autocomplete="name"></label>
+          <label>Email<input name="email" type="email" maxlength="254" required autocomplete="username"></label>
+          <label>Password<input name="password" type="password" maxlength="128" required autocomplete="current-password"></label>
+          <button id="auth-submit" class="primary" type="submit">Sign in</button>
+        </form>
+        <p class="muted small">Dummy account: buyer@example.com / buyer1234. New accounts work immediately; no email verification.</p>
+      </div>
+      <button id="logout" hidden>Sign out</button>
+      <div id="my-orders" hidden><h3>Your orders</h3><div id="order-list"></div></div>
+    </section>
+  </main>
+  <footer>Simple Shop · Demo products · Prices in USD<p id="assistant-status" role="status" hidden></p></footer>
+</body>
+</html>

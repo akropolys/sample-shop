@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin · Simple Shop</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/admin.js"></script>
+</head>
+<body>
+  <header><a class="brand" href="/">Simple Shop</a><nav><a href="/">Back to shop</a></nav></header>
+  <main>
+    <h1>Shop admin</h1>
+    <div id="message" class="notice" role="status" hidden></div>
+    <section id="admin-login" class="panel narrow">
+      <h2>Sign in to the CMS</h2>
+      <form id="login-form" class="form">
+        <label>Email<input type="email" name="email" required autocomplete="username"></label>
+        <label>Password<input type="password" name="password" required autocomplete="current-password"></label>
+        <button class="primary" type="submit">Sign in</button>
+      </form>
+      <p class="muted small">Demo admin: admin@example.com / admin1234</p>
+    </section>
+    <div id="cms" hidden>
+      <div class="section-heading"><p id="admin-identity"></p><button id="admin-logout">Sign out</button></div>
+      <section class="panel"><h2>Akropolys</h2><p id="akropolys-status"></p><a href="/api/actions" target="_blank" rel="noopener">View site action definitions</a></section>
+      <section class="panel">
+        <h2 id="product-form-heading">Add product</h2>
+        <form id="product-form" class="form">
+          <input type="hidden" name="id">
+          <div class="form-row">
+            <label>Name<input name="name" required maxlength="100"></label>
+            <label>Price (USD)<input name="price" type="number" min="0.50" max="100000" step="0.01" required></label>
+          </div>
+          <label>Description<textarea name="description" rows="2" required maxlength="1000"></textarea></label>
+          <label>Image URL<input name="image_url" required maxlength="2000" placeholder="https://… or /images/mug.jpg"></label>
+          <label class="checkbox"><input name="active" type="checkbox" checked> Visible in shop</label>
+          <div class="actions"><button id="save-product" class="primary" type="submit">Save product</button><button id="cancel-edit" type="button" hidden>Cancel edit</button></div>
+        </form>
+      </section>
+      <section class="panel"><h2>Products</h2><div id="admin-products"></div></section>
+      <section class="panel"><h2>Orders</h2><p class="muted small">Includes the user ID, or guest, attached to each checkout.</p><div id="admin-orders"></div></section>
+      <section class="panel"><h2>User comments</h2><div id="admin-comments"></div></section>
+      <section class="panel"><h2>Accounts</h2><div id="admin-users"></div></section>
+    </div>
+  </main>
+</body>
+</html>

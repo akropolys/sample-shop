@@ -1,0 +1,20 @@
+{
+  "name": "simple-shop",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A small vanilla JavaScript shop with SQLite and Stripe Checkout",
+  "engines": {
+    "node": ">=24.15.0"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "dev": "node --env-file-if-exists=.env --watch server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@akropolys/sdk": "2.0.2",
+    "express": "^5.1.0",
+    "stripe": "^19.0.0"
+  }
+}
