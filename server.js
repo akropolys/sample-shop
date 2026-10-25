@@ -304,10 +304,8 @@ export function createApp({ db, stripe = null, stripeMode = 'test', webhookSecre
   return app;
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const port = Number(process.env.PORT || 3000);
-  const baseUrl = (process.env.BASE_URL || `http://localhost:${port}`).replace(/\/$/, '');
-  const db = openDatabase(resolve(root, process.env.DATABASE_PATH || 'data/shop.sqlite'), {
+function createConfiguredApp(baseUrl, databasePath) {
+  const db = openDatabase(databasePath, {
     adminEmail: process.env.ADMIN_EMAIL,
     adminPassword: process.env.ADMIN_PASSWORD
   });
@@ -321,6 +319,18 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     baseUrl
   });
   const app = createApp({ db, stripe, stripeMode: process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_') ? 'live' : 'test', webhookSecret: process.env.STRIPE_WEBHOOK_SECRET, baseUrl, akropolys });
+  return { app, db, stripe, akropolys };
+}
+
+const isVercel = process.env.VERCEL === '1' || Boolean(process.env.VERCEL_URL);
+const vercelBaseUrl = (process.env.BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '')).replace(/\/$/, '');
+const vercelRuntime = isVercel ? createConfiguredApp(vercelBaseUrl, '/tmp/shop.sqlite') : null;
+export default vercelRuntime?.app || express();
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const port = Number(process.env.PORT || 3000);
+  const baseUrl = (process.env.BASE_URL || `http://localhost:${port}`).replace(/\/$/, '');
+  const { app, db, stripe, akropolys } = createConfiguredApp(baseUrl, resolve(root, process.env.DATABASE_PATH || 'data/shop.sqlite'));
   const server = app.listen(port, '127.0.0.1', () => {
     console.log(`Simple Shop: ${baseUrl}`);
     console.log(`CMS: ${baseUrl}/admin.html`);
