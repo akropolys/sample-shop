@@ -59,12 +59,6 @@ export function openDatabase(filename, options = {}) {
       quantity INTEGER NOT NULL CHECK (quantity BETWEEN 1 AND 99),
       PRIMARY KEY (cart_id, product_id)
     );
-    CREATE TABLE IF NOT EXISTS action_tokens (
-      token_hash TEXT PRIMARY KEY,
-      cart_id TEXT NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
-      session_token_hash TEXT REFERENCES sessions(token_hash) ON DELETE CASCADE,
-      expires_at INTEGER NOT NULL
-    );
     CREATE TABLE IF NOT EXISTS orders (
       id TEXT PRIMARY KEY,
       user_id INTEGER REFERENCES users(id),

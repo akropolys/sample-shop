@@ -144,8 +144,7 @@ export function createApp({ db, stripe = null, stripeMode = 'test', webhookSecre
   }));
   app.get('/api/me', (req, res) => res.json({ user: req.user ? publicUser(req.user) : null }));
   app.get('/api/kiku/identity', async (req, res) => res.json(akropolys ? await akropolys.identity(req.user) : {}));
-  app.get('/api/actions/identity', (req, res) => res.json(carts.identity(req, res)));
-  app.get('/api/actions', (req, res) => res.json({ identity_url: `${baseUrl}/api/actions/identity`, actions: siteActions(baseUrl) }));
+  app.get('/api/actions', (req, res) => res.json({ actions: siteActions(baseUrl) }));
 
   app.post('/api/auth/register', authLimit, (req, res) => {
     const name = text(req.body.name, 'Name', 1, 80);

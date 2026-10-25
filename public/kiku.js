@@ -34,7 +34,7 @@ export function initKiku(config) {
   ready = new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.id = 'kiku-loader';
-    script.src = 'https://cdn.akropolys.cloud/kiku/2.2.29/kiku.js';
+    script.src = 'https://cdn.akropolys.cloud/kiku/2.2.30/kiku.js';
     script.dataset.siteId = config.site_id;
     script.dataset.apiToken = config.api_token;
     script.dataset.apiUrl = config.api_url;

@@ -50,7 +50,7 @@ stripe listen --events checkout.session.completed,checkout.session.async_payment
 
 Copy the printed `whsec_...` value into `STRIPE_WEBHOOK_SECRET` in `.env`, then restart the shop server while keeping the listener running. Webhooks verify Stripe's signature. Returning from Stripe also verifies the Checkout Session on the server before recording payment or clearing the cart. Visiting a success URL alone does not mark an order paid.
 
-Prices and checkout items always come from the cart in SQLite. Stripe metadata includes `order_id` and `user_id`; signed-in buyers get their numeric ID as a string, and guests get `guest`. In SQLite, guest orders have a null `user_id`. Client-supplied user IDs, prices, and checkout items are ignored; identity comes from the session or a verified cart action token.
+Prices and checkout items always come from the cart in SQLite. Stripe metadata includes `order_id` and `user_id`; signed-in buyers get their numeric ID as a string, and guests get `guest`. In SQLite, guest orders have a null `user_id`. Client-supplied user IDs, prices, and checkout items are ignored; identity comes from the existing account or guest session cookie.
 
 ## Kiku and signed ingestion
 
@@ -64,9 +64,9 @@ AKROPOLYS_PRIVATE_KEY="your-multiline-private-key"
 AKROPOLYS_VOICE=false
 ```
 
-The browser loads the documented versioned script at `https://cdn.akropolys.cloud/kiku/2.2.29/kiku.js` once, waits for its load event, then awaits automatic `Kiku.ready`. The loader supplies its own CSS and runtime. Set `AKROPOLYS_VOICE=true` and restart to enable the voice button.
+The browser loads the documented versioned script at `https://cdn.akropolys.cloud/kiku/2.2.30/kiku.js` once, waits for its load event, then awaits automatic `Kiku.ready`. The loader supplies its own CSS and runtime. Set `AKROPOLYS_VOICE=true` and restart to enable the voice button.
 
-Kiku uses the supported `data-api-url` option to send API requests through this shop's `/api/akropolys` route. That route streams requests to the fixed Akropolys API, preserves shopper proofs, and excludes shop cookies. This works around the deployed API's missing `X-Akropolys-Shopper-Proof` CORS allowance. It does not make localhost reachable for server-side site actions. A small compatibility rule inside the widget's isolated style root uses `overflow: clip` to prevent its fixed panel from scrolling above the viewport when the input receives focus.
+Kiku uses the supported `data-api-url` option to send API requests through this shop's `/api/akropolys` route. That route streams requests to the fixed Akropolys API, preserves shopper proofs, and excludes shop cookies. This works around the deployed API's missing `X-Akropolys-Shopper-Proof` CORS allowance. Site actions use the visitor browser and the shop cookies, so local endpoints can run on localhost with the browser-action backend and Kiku build. A small compatibility rule inside the widget's isolated style root uses `overflow: clip` to prevent its fixed panel from scrolling above the viewport when the input receives focus.
 
 The existing `/api/products` loading flow publishes its loaded products through `createIngestClient` from `@akropolys/sdk/server` and `ingestBatch(records, signed, { batchSize: 25 })`. Rendering and shop requests do not wait for indexing. This is the only catalogue-publishing path. Batch ingestion needs Growth, Pro, or Business. A rejected submission is logged and appears in the admin's Akropolys status.
 
@@ -91,11 +91,11 @@ Carts live in SQLite. Guests have a private cart cookie; each signed-in account 
 | `clear_cart` | DELETE | `/api/cart` | none |
 | `checkout` | POST | `/api/checkout` | none |
 
-In Shell, select `sample-shop`, set its **login/identity endpoint** to `BASE_URL/api/actions/identity`, and add these definitions under **Agents → Actions**. For each action, use its exact method and `fields` JSON Schema. These cart actions support guests, so their definitions leave **Require sign-in** off. They still require the visitor's cart authorization token.
+In Shell, select `sample-shop` and add these definitions under **Agents → Actions**. Use each endpoint's exact method and `fields` JSON Schema. These cart actions support guests, so leave **Require sign-in** off.
 
-Kiku fetches the identity endpoint in the visitor's browser with credentials. It receives `{ authorization: "Bearer ..." }`, then Akropolys forwards that value to action endpoints on the same origin. The token lasts 15 minutes, only authorizes its own cart and checkout, and cannot access account details, comments, or the CMS. Tokens for a signed-in session are revoked on logout. A passed `user_id` or `cart_id` cannot select another visitor's cart. An Akropolys action without authorization is rejected.
+Kiku 2.2.30 calls the existing cart and checkout APIs from the visitor's browser. Signed-in shoppers use the HttpOnly `shop_session` cookie; guests use `shop_guest`. There is no separate action login endpoint, token exchange, `actionAuth` adapter or header callback. The API determines cart ownership from the cookies and ignores client-supplied `user_id` and `cart_id` values. Sign-in proof at `/api/kiku/identity` remains separate: it identifies the customer to Akropolys, not to the shop API.
 
-**Akropolys calls actions from its server, so `localhost` is not a reachable action endpoint.** Deploy the app or provide a public HTTPS tunnel, update `BASE_URL`, restart, and open the shop through that same public address so cookies and the configured identity endpoint match. Use the new address in all Shell definitions. The local action APIs can be tested now; end-to-end Kiku action calls require that public address and the Shell definitions.
+Open the shop through the address in `BASE_URL`, and use that same origin in Shell's action definitions. Browser actions work with local endpoints on a development site; a public tunnel is not needed for these action calls. The widget URL targets the upcoming Kiku 2.2.30 release and requires the matching browser-action backend; publish that build before testing it through the public CDN.
 
 The checkout action returns a `checkout_url` for the buyer to open. It does not charge a card. Payment is recorded only after Stripe verification. Paid quantities are removed once; products added after checkout remain in the cart. For live payments, register the public `/api/stripe/webhook` endpoint in Stripe and put its signing secret in `STRIPE_WEBHOOK_SECRET`.
 
@@ -110,15 +110,14 @@ Example local action test from PowerShell, using a dummy account:
 ```powershell
 $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 Invoke-RestMethod http://localhost:3000/api/auth/login -Method Post -ContentType application/json -Body '{"email":"buyer@example.com","password":"buyer1234"}' -WebSession $session
-$identity = Invoke-RestMethod http://localhost:3000/api/actions/identity -WebSession $session
-Invoke-RestMethod http://localhost:3000/api/cart/items -Method Post -ContentType application/json -Body '{"product_id":2,"quantity":1}' -Headers @{ Authorization = $identity.authorization; 'X-Akropolys-Action' = 'add_cart_item' }
+Invoke-RestMethod http://localhost:3000/api/cart/items -Method Post -ContentType application/json -Body '{"product_id":2,"quantity":1}' -WebSession $session
 ```
 
 ## Files and data
 
 - `server.js`: HTTP API, accounts, sessions, CMS routes, and Stripe.
 - `db.js`: SQLite tables and initial products/accounts.
-- `cart.js`: server carts and scoped action tokens.
+- `cart.js`: server carts using the existing account and guest cookies.
 - `akropolys.js`: signed catalogue batches and shopper proofs.
 - `akropolys-proxy.js`: same-origin requests to the fixed Akropolys API.
 - `site-actions.js`: Shell action definitions and JSON Schemas.
@@ -126,7 +125,7 @@ Invoke-RestMethod http://localhost:3000/api/cart/items -Method Post -ContentType
 - `data/shop.sqlite`: the real SQLite database, created automatically on first start.
 - `test/shop.test.js`: integration tests using a separate in-memory database and a mocked Stripe client, with real Stripe webhook signature verification. These tests do not make payments.
 
-SQLite contains `users`, `sessions`, `products`, `comments`, `carts`, `cart_items`, `action_tokens`, `orders`, and `order_items`. Restarting preserves your data. To reset the dummy data, stop the server and remove only this project's `data` folder, then start it again. `ADMIN_EMAIL` and `ADMIN_PASSWORD` control initial admin creation; changing the password setting does not change an account already stored in the database.
+SQLite contains `users`, `sessions`, `products`, `comments`, `carts`, `cart_items`, `orders`, and `order_items`. Restarting preserves your data. To reset the dummy data, stop the server and remove only this project's `data` folder, then start it again. `ADMIN_EMAIL` and `ADMIN_PASSWORD` control initial admin creation; changing the password setting does not change an account already stored in the database.
 
 This project is a local demo. It has no shipping calculation, tax calculation, inventory tracking, or email delivery. All prices are USD. Keep real credentials out of Git; `.env` and runtime data are ignored.
 

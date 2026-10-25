@@ -184,45 +184,52 @@ test('returning from Stripe verifies payment without a webhook and cancelled ses
   assert.equal((await request('/api/checkout/cs_test_2')).data.status, 'expired');
 });
 
-test('guest cart actions share browser state, cannot select another cart, and cannot access accounts', async (t) => {
+test('cart action discovery has no identity endpoint or token exchange', async (t) => {
+  const { client } = await fixture(t);
+  const request = client();
+  const definitions = await request('/api/actions');
+  assert.equal(definitions.status, 200);
+  assert.equal(Object.hasOwn(definitions.data, 'identity_url'), false);
+  assert.equal(definitions.data.actions.add_cart_item.method, 'POST');
+  assert.equal((await request('/api/actions/identity')).status, 404);
+});
+
+test('guest cart actions reuse the browser cookie and cannot select another cart or account', async (t) => {
   const { client, url } = await fixture(t);
   const guest = client();
   const other = client();
   await guest('/api/cart/items', 'POST', { product_id: 1, quantity: 1 });
-  const identity = (await guest('/api/actions/identity')).data;
-  assert.equal(identity.user_id, null);
-  const headers = { authorization: identity.authorization, 'X-Akropolys-Action': 'add_cart_item' };
-  const action = await fetch(`${url}/api/cart/items`, { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: 2, quantity: 2, user_id: 1, cart_id: 'another-cart' }) });
+  const action = await guest('/api/cart/items', 'POST', { product_id: 2, quantity: 2, user_id: 1, cart_id: 'another-cart' });
   assert.equal(action.status, 200);
+  assert.equal(action.data.user_id, null);
   assert.equal((await guest('/api/cart')).data.count, 3);
   assert.equal((await other('/api/cart')).data.count, 0);
-  assert.equal((await fetch(`${url}/api/admin/users`, { headers })).status, 403);
+  assert.equal((await guest('/api/admin/users')).status, 403);
   assert.equal((await fetch(`${url}/api/cart`, { headers: { 'X-Akropolys-Action': 'get_cart' } })).status, 401);
+  assert.equal((await fetch(`${url}/api/cart`, { headers: { authorization: 'Bearer retired-cart-token' } })).status, 401);
   assert.equal((await guest('/api/cart/items/2', 'PATCH', { quantity: 3 })).data.count, 4);
   assert.equal((await guest('/api/cart/items/1', 'DELETE')).data.count, 3);
   assert.equal((await guest('/api/cart/items/1', 'DELETE')).data.count, 3);
   assert.equal((await guest('/api/cart', 'DELETE')).data.count, 0);
 });
 
-test('login merges guest items, preserves pending checkout, and logout revokes signed-in action tokens', async (t) => {
-  const { client, url, db } = await fixture(t);
+test('login merges guest items and pending checkout; cookie actions follow login and logout', async (t) => {
+  const { client, db } = await fixture(t);
   const request = client();
   await request('/api/cart/items', 'POST', { product_id: 2, quantity: 2 });
-  const guestIdentity = (await request('/api/actions/identity')).data;
   const checkout = await request('/api/checkout', 'POST');
   await request('/api/auth/login', 'POST', { email: 'buyer@example.com', password: 'buyer1234' });
   const cart = (await request('/api/cart')).data;
   assert.equal(cart.user_id, 2);
   assert.equal(cart.count, 2);
   assert.equal(db.prepare('SELECT cart_id FROM orders WHERE id = ?').get(checkout.data.order_id).cart_id, cart.cart_id);
-  assert.equal((await fetch(`${url}/api/cart`, { headers: { authorization: guestIdentity.authorization } })).status, 401);
-  const identity = (await request('/api/actions/identity')).data;
-  assert.equal(identity.user_id, 2);
-  const actionCheckout = await fetch(`${url}/api/checkout`, { method: 'POST', headers: { authorization: identity.authorization, 'X-Akropolys-Action': 'checkout' } });
-  assert.equal((await actionCheckout.json()).user_id, 2);
+  const actionCheckout = await request('/api/checkout', 'POST', { user_id: 1 });
+  assert.equal(actionCheckout.data.user_id, 2);
   await request('/api/auth/logout', 'POST');
-  assert.equal((await request('/api/cart')).data.count, 0);
-  assert.equal((await fetch(`${url}/api/cart`, { headers: { authorization: identity.authorization } })).status, 401);
+  const guestCart = (await request('/api/cart')).data;
+  assert.equal(guestCart.count, 0);
+  assert.equal(guestCart.user_id, null);
+  assert.equal((await request('/api/orders')).status, 401);
   const freshBrowser = client();
   await freshBrowser('/api/auth/login', 'POST', { email: 'buyer@example.com', password: 'buyer1234' });
   assert.equal((await freshBrowser('/api/cart')).data.count, 2);

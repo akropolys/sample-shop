@@ -21,21 +21,8 @@ export function createCartStore(db, cookieOptions) {
   }
 
   function context(req, res) {
-    const authorization = req.get('authorization');
-    if (req.get('x-akropolys-action') && !authorization) fail(401, 'This action needs the visitor cart token from the identity endpoint.');
-    if (authorization) {
-      const token = /^Bearer ([a-f\d]{64})$/i.exec(authorization)?.[1];
-      if (!token) fail(401, 'Invalid cart authorization.');
-      const entry = db.prepare(`SELECT t.*, c.user_id FROM action_tokens t JOIN carts c ON c.id = t.cart_id
-        WHERE t.token_hash = ? AND t.expires_at > ?`).get(hash(token), Date.now());
-      if (!entry) fail(401, 'Cart authorization has expired. Reopen the shop and try again.');
-      let user = null;
-      if (entry.user_id) {
-        user = db.prepare(`SELECT u.* FROM users u JOIN sessions s ON s.user_id = u.id
-          WHERE s.token_hash = ? AND s.expires_at > ? AND u.id = ?`).get(entry.session_token_hash, Date.now(), entry.user_id);
-        if (!user) fail(401, 'Sign in again to use this cart.');
-      }
-      return { id: entry.cart_id, user };
+    if (req.get('authorization') || req.get('x-akropolys-action')) {
+      fail(401, 'Use the shop browser session for cart actions.');
     }
     if (req.user) return { id: userCart(req.user.id).id, user: req.user };
     let cart = guestCart(req);
@@ -114,14 +101,6 @@ export function createCartStore(db, cookieOptions) {
         db.exec('COMMIT');
       } catch (error) { db.exec('ROLLBACK'); throw error; }
       res.clearCookie('shop_guest', cookieOptions);
-    },
-    identity(req, res) {
-      if (req.get('authorization')) fail(400, 'Open this identity endpoint from the shop.');
-      const owner = context(req, res);
-      const token = randomBytes(32).toString('hex');
-      db.prepare('DELETE FROM action_tokens WHERE expires_at < ?').run(Date.now());
-      db.prepare('INSERT INTO action_tokens VALUES (?, ?, ?, ?)').run(hash(token), owner.id, req.user ? hash(req.sessionToken) : null, Date.now() + 15 * 60 * 1000);
-      return { authorization: `Bearer ${token}`, user_id: owner.user?.id || null };
     }
   };
 }
