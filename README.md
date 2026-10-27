@@ -64,7 +64,7 @@ AKROPOLYS_PRIVATE_KEY="your-multiline-private-key"
 AKROPOLYS_VOICE=false
 ```
 
-The browser loads the documented versioned script at `https://cdn.akropolys.cloud/kiku/2.2.30/kiku.js` once, waits for its load event, then awaits automatic `Kiku.ready`. The loader supplies its own CSS and runtime. Set `AKROPOLYS_VOICE=true` and restart to enable the voice button.
+The browser loads the documented versioned script at `https://cdn.akropolys.cloud/kiku/2.2.33/kiku.js` once, waits for its load event, then awaits automatic `Kiku.ready`. The loader supplies its own CSS and runtime. Set `AKROPOLYS_VOICE=true` and restart to enable the voice button.
 
 Kiku uses the supported `data-api-url` option to send API requests through this shop's `/api/akropolys` route. That route streams requests to the fixed Akropolys API, preserves shopper proofs, and excludes shop cookies. This works around the deployed API's missing `X-Akropolys-Shopper-Proof` CORS allowance. Site actions use the visitor browser and the shop cookies, so local endpoints can run on localhost with the browser-action backend and Kiku build. A small compatibility rule inside the widget's isolated style root uses `overflow: clip` to prevent its fixed panel from scrolling above the viewport when the input receives focus.
 
@@ -93,9 +93,9 @@ Carts live in SQLite. Guests have a private cart cookie; each signed-in account 
 
 In Shell, select `sample-shop` and add these definitions under **Agents → Actions**. Use each endpoint's exact method and `fields` JSON Schema. These cart actions support guests, so leave **Require sign-in** off.
 
-Kiku 2.2.30 calls the existing cart and checkout APIs from the visitor's browser. Signed-in shoppers use the HttpOnly `shop_session` cookie; guests use `shop_guest`. There is no separate action login endpoint, token exchange, `actionAuth` adapter or header callback. The API determines cart ownership from the cookies and ignores client-supplied `user_id` and `cart_id` values. Sign-in proof at `/api/kiku/identity` remains separate: it identifies the customer to Akropolys, not to the shop API.
+Kiku 2.2.33 calls the existing cart and checkout APIs from the visitor's browser. Signed-in shoppers use the HttpOnly `shop_session` cookie; guests use `shop_guest`. There is no separate action login endpoint, token exchange, `actionAuth` adapter or header callback. The API determines cart ownership from the cookies and ignores client-supplied `user_id` and `cart_id` values. Sign-in proof at `/api/kiku/identity` remains separate: it identifies the customer to Akropolys, not to the shop API.
 
-Open the shop through the address in `BASE_URL`, and use that same origin in Shell's action definitions. Browser actions work with local endpoints on a development site; a public tunnel is not needed for these action calls. The widget URL targets the upcoming Kiku 2.2.30 release and requires the matching browser-action backend; publish that build before testing it through the public CDN.
+Open the shop through the address in `BASE_URL`, and use that same origin in Shell's action definitions. Browser actions work with local endpoints on a development site; a public tunnel is not needed for these action calls. The widget uses the published Kiku 2.2.33 CDN embed with browser-action support.
 
 The checkout action returns a `checkout_url` for the buyer to open. It does not charge a card. Payment is recorded only after Stripe verification. Paid quantities are removed once; products added after checkout remain in the cart. For live payments, register the public `/api/stripe/webhook` endpoint in Stripe and put its signing secret in `STRIPE_WEBHOOK_SECRET`.
 

@@ -13,7 +13,7 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@akropolys/sdk": "2.0.2",
+    "@akropolys/sdk": "2.0.5",
     "express": "^5.1.0",
     "stripe": "^19.0.0"
   }
