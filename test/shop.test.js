@@ -315,3 +315,12 @@ test('the assistant proxy streams responses, forwards shopper proof, and exclude
   assert.equal((await fetch(`${url}/api/akropolys/chat/stream`, { method: 'POST' })).status, 403);
   assert.equal((await fetch(`${url}/api/akropolys/site-widget?siteId=test-shop`)).status, 200);
 });
+
+test('assistant proxy stays on the visitor origin instead of a protected deployment URL', () => {
+  const integration = createAkropolys({
+    siteId: 'test-shop', apiToken: 'public-token',
+    baseUrl: 'https://protected-deployment.vercel.app',
+  });
+  assert.equal(integration.publicConfig.api_url, '/api/akropolys');
+  assert.equal(new URL(integration.publicConfig.api_url, 'https://shop.example').href, 'https://shop.example/api/akropolys');
+});
