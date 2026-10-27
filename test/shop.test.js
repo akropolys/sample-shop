@@ -324,3 +324,21 @@ test('assistant proxy stays on the visitor origin instead of a protected deploym
   assert.equal(integration.publicConfig.api_url, '/api/akropolys');
   assert.equal(new URL(integration.publicConfig.api_url, 'https://shop.example').href, 'https://shop.example/api/akropolys');
 });
+
+
+test('checkout verification requires the owning browser or account before contacting Stripe', async t => {
+  const { client, sessions } = await fixture(t);
+  const guest = client(), other = client();
+  await guest('/api/cart/items', 'POST', { product_id: 1, quantity: 1 });
+  await guest('/api/checkout', 'POST', {});
+  sessions.get('cs_test_1').payment_status = 'paid';
+  sessions.get('cs_test_1').status = 'complete';
+  assert.equal((await other('/api/checkout/cs_test_1')).status, 404);
+  assert.equal((await guest('/api/checkout/cs_test_1')).data.status, 'paid');
+  await guest('/api/auth/login', 'POST', { email: 'buyer@example.com', password: 'buyer1234' });
+  await guest('/api/cart/items', 'POST', { product_id: 2, quantity: 1 });
+  await guest('/api/checkout', 'POST', {});
+  assert.equal((await other('/api/checkout/cs_test_2')).status, 404);
+  await guest('/api/auth/logout', 'POST');
+  assert.equal((await guest('/api/checkout/cs_test_2')).status, 404);
+});

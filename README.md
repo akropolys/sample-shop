@@ -139,3 +139,40 @@ This project is a local demo. It has no shipping calculation, tax calculation, i
 - [Akropolys signed user IDs](https://akropolys.cloud/docs/provider/)
 - [Akropolys site actions](https://akropolys.cloud/docs/actions/)
 - Product photos from Unsplash: [backpack](https://images.unsplash.com/photo-1553062407-98eeb64c6a62), [mug](https://images.unsplash.com/photo-1514228742587-6b1558fcca3d), [headphones](https://images.unsplash.com/photo-1505740420928-5e560c06d30e), [sneakers](https://images.unsplash.com/photo-1542291026-7eec264c27ff).
+
+
+## Free action-hook demo
+
+Open `/action-demo.html` (also linked as **Free action demo** in the shop).
+The test runner exercises the endpoints without Kiku. No Stripe account, card,
+cart items or money are required. Nothing in this flow creates real orders,
+changes the cart, or calls Stripe. The normal `/api/checkout` remains unchanged.
+
+`GET /api/demo/actions` returns the four definitions, including schemas and hooks;
+they are also included in `/api/actions`.
+
+| Action | Method | Path | Input |
+| --- | --- | --- | --- |
+| `demo_before` | GET | `/api/demo/before` | none |
+| `demo_checkout` | POST | `/api/demo/checkout` | none |
+| `demo_after` | POST | `/api/demo/after` | `demo_id` from checkout |
+| `demo_on_return` | GET | `/api/demo/on-return` | `demo_id` query parameter |
+
+In Shell, save the helpers first, then `demo_checkout`. Set its **Before** to
+`demo_before`, **After success** to `demo_after`, and **On return** to
+`demo_on_return`. Enable Kiku access for all four; Require sign-in stays off.
+Ask Kiku in chat: **Start the free demo checkout.** Open its link, select
+**Complete demo — $0** or **Cancel demo**, then switch back to the same chat tab.
+Use the matching browser origin from BASE_URL throughout.
+
+Creation of a demo session is the main action's successful outcome: the after
+hook records that creation, not payment. The on-return hook reports `pending`,
+`completed`, or `cancelled`. Returning without choosing does not imply success.
+Inspect `/api/demo/events` or refresh the demo page's activity table to see actual
+endpoint calls. The runner calls these APIs directly; it does not prove Kiku's
+orchestration is deployed. Chat return hooks require the matching backend and
+widget support described in the action-timings implementation.
+
+Demo sessions and events use separate SQLite tables and an HttpOnly browser
+cookie. Repeat after-success requests are idempotent; a finished outcome cannot
+be changed. Other browser sessions cannot read or complete your demo.

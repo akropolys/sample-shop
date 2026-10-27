@@ -8,6 +8,7 @@ import { createAkropolys } from './akropolys.js';
 import { createCartStore } from './cart.js';
 import { siteActions } from './site-actions.js';
 import { akropolysProxy } from './akropolys-proxy.js';
+import { installDemoActions } from './demo-actions.js';
 
 const root = dirname(fileURLToPath(import.meta.url));
 const publicUser = ({ id, name, email, role }) => ({ id, name, email, role });
@@ -145,6 +146,7 @@ export function createApp({ db, stripe = null, stripeMode = 'test', webhookSecre
   app.get('/api/me', (req, res) => res.json({ user: req.user ? publicUser(req.user) : null }));
   app.get('/api/kiku/identity', async (req, res) => res.json(akropolys ? await akropolys.identity(req.user) : {}));
   app.get('/api/actions', (req, res) => res.json({ actions: siteActions(baseUrl) }));
+  installDemoActions(app, { db, baseUrl, cookieOptions });
 
   app.post('/api/auth/register', authLimit, (req, res) => {
     const name = text(req.body.name, 'Name', 1, 80);
@@ -246,6 +248,10 @@ export function createApp({ db, stripe = null, stripeMode = 'test', webhookSecre
     if (!stripe) throw httpError(503, 'Stripe is not configured.');
     const order = db.prepare('SELECT * FROM orders WHERE stripe_session_id = ?').get(req.params.sessionId);
     if (!order) throw httpError(404, 'Checkout not found.');
+    const owner = carts.context(req, res);
+    if (order.cart_id !== owner.id || (order.user_id !== null && order.user_id !== req.user?.id)) {
+      throw httpError(404, 'Checkout not found.');
+    }
     try {
       const session = await stripe.checkout.sessions.retrieve(req.params.sessionId);
       settleSession(session);

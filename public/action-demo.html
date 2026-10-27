@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Action hooks demo · Simple Shop</title><link rel="stylesheet" href="/style.css"><script type="module" src="/action-demo.js"></script></head>
+<body><header><a class="brand" href="/">Simple Shop</a><a href="/">Back to shop</a></header><main>
+  <h1>Try every action hook. Free.</h1><p>Before → create demo → after success → open checkout → on return.</p>
+  <section class="panel"><h2>Test the endpoints</h2><p>This runner calls the APIs directly. To test Kiku’s hook orchestration, use the setup below.</p>
+    <div class="actions"><button id="start" class="primary">Start free demo</button><a id="checkout-link" target="_blank" rel="noopener" hidden>Open free checkout ↗</a><button id="check" hidden>Check return status</button></div>
+    <p id="message" role="status">No payment account or card needed.</p>
+    <p class="muted small">Complete or cancel in the checkout tab, then switch back here. Returning without choosing leaves the demo pending.</p>
+  </section>
+  <section class="panel"><div class="section-heading"><h2>Endpoint activity</h2><button id="refresh">Refresh</button></div><div class="table-scroll"><table><thead><tr><th>Time</th><th>Stage</th><th>Result</th><th>Demo</th></tr></thead><tbody id="events"></tbody></table></div></section>
+  <section class="panel"><h2>Try it through Kiku</h2><p>In Shell → Agents → Actions, add these four actions from <a href="/api/demo/actions" target="_blank" rel="noopener">the definitions JSON</a>. Enable Kiku access for all four and leave Require sign-in off.</p>
+    <p>On <code>demo_checkout</code>, set Before to <code>demo_before</code>, After success to <code>demo_after</code>, and On return to <code>demo_on_return</code>. Save the helper actions first, then set the links.</p>
+    <p>In the shop’s Kiku chat, say: <strong>“Start the free demo checkout.”</strong> Open the link Kiku gives you, complete or cancel, then switch back to that same chat tab.</p>
+    <p class="muted small">After success records creation of the demo session. On return checks whether you completed or cancelled it. The normal Stripe checkout remains separate.</p>
+    <details><summary>Action definitions</summary><pre id="definitions"></pre></details>
+  </section>
+</main></body></html>
