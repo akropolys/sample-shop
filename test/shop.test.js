@@ -350,3 +350,13 @@ test('Vercel production uses its public domain instead of the deployment URL', (
   assert.equal(resolveVercelBaseUrl({ ...env, VERCEL_ENV: 'preview' }), 'https://protected-deployment.vercel.app');
   assert.equal(resolveVercelBaseUrl({ ...env, BASE_URL: 'https://example.com/' }), 'https://example.com');
 });
+
+
+test('a shop alias accepts its own origin and rejects another origin', async (t) => {
+  const { client, url } = await fixture(t, { payments: false });
+  const request = client();
+  const accepted = await request('/api/cart/items', 'POST', { product_id: 1, quantity: 1 }, { origin: url });
+  assert.equal(accepted.status, 200);
+  const rejected = await request('/api/cart/items', 'POST', { product_id: 1, quantity: 1 }, { origin: 'https://attacker.example' });
+  assert.equal(rejected.status, 403);
+});

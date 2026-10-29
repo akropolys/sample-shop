@@ -54,7 +54,10 @@ export function createApp({ db, stripe = null, stripeMode = 'test', webhookSecre
         : "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
     });
     if (req.path.startsWith('/api/')) res.set('Cache-Control', 'no-store');
-    if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && req.get('origin') && req.get('origin') !== new URL(baseUrl).origin) {
+    const origin = req.get('origin');
+    const configured = new URL(baseUrl);
+    const currentOrigin = `${configured.protocol}//${req.get('host')}`;
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(req.method) && origin && origin !== configured.origin && origin !== currentOrigin) {
       return res.status(403).json({ error: 'Use the shop from its own address.' });
     }
     next();
