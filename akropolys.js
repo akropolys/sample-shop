@@ -24,7 +24,7 @@ export function productRecords(products, baseUrl) {
   }));
 }
 
-export function createAkropolys({ siteId, apiToken, privateKey, publicKeyId, baseUrl, voice = false }, dependencies = {}) {
+export function createAkropolys({ siteId, apiToken, privateKey, publicKeyId, baseUrl }, dependencies = {}) {
   if (!siteId && !apiToken && !privateKey && !publicKeyId) return null;
   if (!siteId || !apiToken) throw new Error('Akropolys needs both a site ID and public API token.');
   if (Boolean(privateKey) !== Boolean(publicKeyId)) throw new Error('Akropolys signing needs both the private key and public key ID.');
@@ -33,7 +33,7 @@ export function createAkropolys({ siteId, apiToken, privateKey, publicKeyId, bas
   let queue = Promise.resolve();
   const status = { site_id: siteId, signed: Boolean(privateKey), last_result: null, last_error: null, pending: 0 };
   return {
-    publicConfig: { enabled: true, site_id: siteId, api_token: apiToken, voice, api_url: '/api/akropolys' },
+    publicConfig: { enabled: true, site_id: siteId, api_token: apiToken, api_url: '/api/akropolys' },
     async identity(user) {
       if (!user) return {};
       const shopperId = String(user.id);

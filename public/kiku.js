@@ -39,7 +39,7 @@ export function initKiku(config) {
     script.dataset.apiToken = config.api_token;
     script.dataset.apiUrl = new URL(config.api_url, window.location.origin).href;
     script.dataset.label = 'Ask about products';
-    script.dataset.voice = String(config.voice);
+    script.dataset.voice = 'true';
     script.addEventListener('load', () => {
       if (!window.Kiku?.ready) { reject(new Error('Kiku loaded without its setup promise.')); return; }
       window.Kiku.ready.then(() => { keepPanelInViewport(); return window.Kiku; }).then(resolve, reject);

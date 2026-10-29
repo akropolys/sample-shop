@@ -323,7 +323,6 @@ function createConfiguredApp(baseUrl, databasePath) {
     apiToken: process.env.NEXT_PUBLIC_AKROPOLYS_API_TOKEN,
     publicKeyId: process.env.NEXT_PUBLIC_AKROPOLYS_PUBLIC_KEY_ID,
     privateKey: process.env.AKROPOLYS_PRIVATE_KEY,
-    voice: process.env.AKROPOLYS_VOICE === 'true',
     baseUrl
   });
   const app = createApp({ db, stripe, stripeMode: process.env.STRIPE_SECRET_KEY?.startsWith('sk_live_') ? 'live' : 'test', webhookSecret: process.env.STRIPE_WEBHOOK_SECRET, baseUrl, akropolys });
