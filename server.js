@@ -328,7 +328,13 @@ function createConfiguredApp(baseUrl, databasePath) {
 }
 
 const isVercel = process.env.VERCEL === '1' || Boolean(process.env.VERCEL_URL);
-const vercelBaseUrl = (process.env.BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '')).replace(/\/$/, '');
+export function resolveVercelBaseUrl(env) {
+  const host = env.VERCEL_ENV === 'production'
+    ? (env.VERCEL_PROJECT_PRODUCTION_URL || env.VERCEL_URL)
+    : (env.VERCEL_URL || env.VERCEL_PROJECT_PRODUCTION_URL);
+  return (env.BASE_URL || (host ? `https://${host}` : '')).replace(/\/$/, '');
+}
+const vercelBaseUrl = resolveVercelBaseUrl(process.env);
 const vercelRuntime = isVercel ? createConfiguredApp(vercelBaseUrl, '/tmp/shop.sqlite') : null;
 export default vercelRuntime?.app || express();
 

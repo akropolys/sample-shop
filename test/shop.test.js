@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import Stripe from 'stripe';
 import { openDatabase } from '../db.js';
-import { createApp } from '../server.js';
+import { createApp, resolveVercelBaseUrl } from '../server.js';
 import { createAkropolys } from '../akropolys.js';
 import { generateKeyPairSync, verify, constants } from 'node:crypto';
 
@@ -341,4 +341,12 @@ test('checkout verification requires the owning browser or account before contac
   assert.equal((await other('/api/checkout/cs_test_2')).status, 404);
   await guest('/api/auth/logout', 'POST');
   assert.equal((await guest('/api/checkout/cs_test_2')).status, 404);
+});
+
+
+test('Vercel production uses its public domain instead of the deployment URL', () => {
+  const env = { VERCEL_ENV: 'production', VERCEL_URL: 'protected-deployment.vercel.app', VERCEL_PROJECT_PRODUCTION_URL: 'sample-shop-pi.vercel.app' };
+  assert.equal(resolveVercelBaseUrl(env), 'https://sample-shop-pi.vercel.app');
+  assert.equal(resolveVercelBaseUrl({ ...env, VERCEL_ENV: 'preview' }), 'https://protected-deployment.vercel.app');
+  assert.equal(resolveVercelBaseUrl({ ...env, BASE_URL: 'https://example.com/' }), 'https://example.com');
 });

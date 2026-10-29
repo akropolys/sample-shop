@@ -64,7 +64,7 @@ AKROPOLYS_PRIVATE_KEY="your-multiline-private-key"
 AKROPOLYS_VOICE=false
 ```
 
-The browser loads the documented versioned script at `https://cdn.akropolys.cloud/kiku/2.2.33/kiku.js` once, waits for its load event, then awaits automatic `Kiku.ready`. The loader supplies its own CSS and runtime. Set `AKROPOLYS_VOICE=true` and restart to enable the voice button.
+The browser loads the documented versioned script at `https://cdn.akropolys.cloud/kiku/2.2.34/kiku.js` once, waits for its load event, then awaits automatic `Kiku.ready`. The loader supplies its own CSS and runtime. Set `AKROPOLYS_VOICE=true` and restart to enable the voice button.
 
 Kiku uses the supported `data-api-url` option to send API requests through this shop's `/api/akropolys` route. That route streams requests to the fixed Akropolys API, preserves shopper proofs, and excludes shop cookies. This works around the deployed API's missing `X-Akropolys-Shopper-Proof` CORS allowance. Site actions use the visitor browser and the shop cookies, so local endpoints can run on localhost with the browser-action backend and Kiku build. A small compatibility rule inside the widget's isolated style root uses `overflow: clip` to prevent its fixed panel from scrolling above the viewport when the input receives focus.
 

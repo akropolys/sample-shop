@@ -28,7 +28,7 @@ export function createAkropolys({ siteId, apiToken, privateKey, publicKeyId, bas
   if (!siteId && !apiToken && !privateKey && !publicKeyId) return null;
   if (!siteId || !apiToken) throw new Error('Akropolys needs both a site ID and public API token.');
   if (Boolean(privateKey) !== Boolean(publicKeyId)) throw new Error('Akropolys signing needs both the private key and public key ID.');
-  const client = dependencies.client || createIngestClient({ siteId, apiToken, privateKey, kid: publicKeyId });
+  const client = dependencies.client || createIngestClient({ siteId, apiToken, privateKey, kid: publicKeyId, timeoutMs: 60000 });
   const makeProof = dependencies.signUser || signUser;
   let queue = Promise.resolve();
   const status = { site_id: siteId, signed: Boolean(privateKey), last_result: null, last_error: null, pending: 0 };
