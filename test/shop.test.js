@@ -71,6 +71,21 @@ test('dummy accounts have distinct IDs, persist sessions, and cannot grant thems
   assert.equal(login.data.user.id, created.data.user.id);
 });
 
+test('groceries can be added to the real shop cart with their seeded prices', async (t) => {
+  const { client } = await fixture(t);
+  const request = client();
+  const products = (await request('/api/products')).data;
+  for (const name of ['Chicken Breast', 'Spaghetti', 'Chopped Tomatoes']) {
+    const item = products.find(product => product.name === name);
+    assert.ok(item, `${name} is available`);
+    assert.match(item.image_url, /^https:\/\//);
+    assert.equal((await request('/api/cart/items', 'POST', { product_id: item.id, quantity: 1 })).status, 200);
+  }
+  const cart = (await request('/api/cart')).data;
+  assert.equal(cart.items.length, 3);
+  assert.equal(cart.total_cents, 799 + 299 + 199);
+});
+
 test('comments use the authenticated user ID and only the owner or admin can delete them', async (t) => {
   const { client } = await fixture(t);
   const buyer = client();
@@ -282,9 +297,11 @@ test('the loaded catalogue publishes stable IDs, prices, images, and hidden avai
   const { client, db } = await fixture(t, { akropolys });
   db.prepare('UPDATE products SET active = 0 WHERE id = 1').run();
   const response = await client()('/api/products');
-  assert.equal(response.data.length, 3);
+  assert.equal(response.data.length, db.prepare('SELECT COUNT(*) AS n FROM products WHERE active = 1').get().n);
   assert.equal(batches.length, 1);
-  assert.equal(batches[0].records.length, 4);
+  assert.equal(batches[0].records.length, db.prepare('SELECT COUNT(*) AS n FROM products').get().n);
+  assert.ok(batches[0].records.some((item) => item.title === 'Chicken Breast'));
+  assert.ok(batches[0].records.some((item) => item.title === 'Fresh Coriander'));
   const record = batches[0].records.find((item) => item.id === 1);
   assert.equal(record.fields.available, false);
   assert.equal(record.fields.price, 39);

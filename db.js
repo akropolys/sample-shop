@@ -2,6 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import { ingredients } from './ingredients.js';
 
 export function hashPassword(password) {
   const salt = randomBytes(16).toString('hex');
@@ -98,6 +99,23 @@ export function openDatabase(filename, options = {}) {
     insert.run('Ceramic Mug', 'A comfortable cup for your morning coffee or tea.', 1200, '/images/mug.jpg');
     insert.run('Wireless Headphones', 'Over-ear headphones for music, work, and quiet moments.', 5900, '/images/headphones.jpg');
     insert.run('Red Sneakers', 'Light everyday sneakers with a little color.', 4900, '/images/sneakers.jpg');
+  }
+  // One-time, transactional seed also adds groceries to existing shops without overwriting edits.
+  db.exec('CREATE TABLE IF NOT EXISTS seed_migrations (name TEXT PRIMARY KEY)');
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    if (!db.prepare('SELECT name FROM seed_migrations WHERE name = ?').get('grocery-ingredients-v1')) {
+      const exists = db.prepare('SELECT id FROM products WHERE name = ? COLLATE NOCASE LIMIT 1');
+      const insert = db.prepare('INSERT INTO products (name, description, price_cents, image_url) VALUES (?, ?, ?, ?)');
+      for (const item of ingredients) {
+        if (!exists.get(item.name)) insert.run(item.name, item.description, item.price_cents, item.image_url);
+      }
+      db.prepare('INSERT INTO seed_migrations (name) VALUES (?)').run('grocery-ingredients-v1');
+    }
+    db.exec('COMMIT');
+  } catch (error) {
+    db.exec('ROLLBACK');
+    throw error;
   }
   db.prepare('DELETE FROM sessions WHERE expires_at < ?').run(Date.now());
   return db;

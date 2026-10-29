@@ -1,0 +1,30 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { DatabaseSync } from 'node:sqlite';
+import { openDatabase } from '../db.js';
+
+test('groceries are added once to an existing shop without overwriting its products', (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'shop-food-test-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const file = join(dir, 'shop.sqlite');
+  const old = new DatabaseSync(file);
+  old.exec(`CREATE TABLE products (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, description TEXT NOT NULL, price_cents INTEGER NOT NULL, image_url TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1);
+    INSERT INTO products (name, description, price_cents, image_url) VALUES ('Existing product', 'Keep me', 500, '/images/mug.jpg');
+    INSERT INTO products (name, description, price_cents, image_url) VALUES ('Chicken Breast', 'My own chicken', 1234, '/images/mug.jpg');`);
+  old.close();
+  let db = openDatabase(file);
+  assert.equal(db.prepare('SELECT description FROM products WHERE id = 2').get().description, 'My own chicken');
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM products WHERE name = 'Chicken Breast'").get().n, 1);
+  const before = db.prepare('SELECT COUNT(*) AS n FROM products').get().n;
+  assert.equal(before, 39);
+  db.prepare("UPDATE products SET name = 'My renamed chicken', active = 0 WHERE id = 2").run();
+  db.close();
+  db = openDatabase(file);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM products').get().n, before);
+  assert.equal(db.prepare('SELECT active FROM products WHERE id = 2').get().active, 0);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM products WHERE name = 'Chicken Breast'").get().n, 0);
+  db.close();
+});
