@@ -5,6 +5,9 @@ body { margin: 0; }
 a { color: #315346; }
 header, main, footer { max-width: 1100px; margin: auto; padding: 24px; }
 header { display: flex; justify-content: space-between; align-items: center; gap: 16px; border-bottom: 1px solid #ddd; }
+.shop-header { position: sticky; top: 0; z-index: 100; width: 100%; background: #fafafa; }
+.shop-header nav { margin-left: auto; }
+#kiku-header { flex: none; }
 nav { display: flex; gap: 20px; }
 .brand { font-size: 21px; font-weight: bold; text-decoration: none; color: inherit; }
 h1 { font-size: 30px; margin: 0 0 6px; }
@@ -23,7 +26,7 @@ p { margin: 8px 0 14px; }
 .product-content > p { font-size: 14px; min-height: 42px; }
 .product-buy, .section-heading, .total { display: flex; justify-content: space-between; gap: 12px; align-items: center; }
 .panel { padding: 20px; margin-bottom: 22px; }
-.cart { position: sticky; top: 20px; }
+.cart { position: sticky; top: 100px; }
 .cart-item { display: grid; gap: 4px; padding: 12px 0; border-bottom: 1px solid #eee; }
 .cart-item input { width: 66px; }
 .total { margin-top: 18px; font-size: 18px; }
@@ -70,6 +73,8 @@ footer { font-size: 13px; color: #656565; }
 @media (max-width: 480px) {
   header, main, footer { padding: 18px; }
   header { flex-direction: column; }
+  .shop-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+  .shop-header nav { grid-column: 1 / -1; grid-row: 2; margin-left: 0; flex-wrap: wrap; gap: 8px 16px; }
   .products, .form-row { grid-template-columns: 1fr; }
   .product > img { height: 220px; }
 }

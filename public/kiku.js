@@ -14,6 +14,16 @@ export function reportKikuError(error) {
   status('The shop assistant is unavailable. Please try again later.');
 }
 
+function anchorKikuInHeader() {
+  const host = document.getElementById('kiku-embed');
+  const target = document.getElementById('kiku-header');
+  if (!host || !target) return;
+  host.style.position = 'static';
+  host.style.removeProperty('right');
+  host.style.removeProperty('bottom');
+  target.append(host);
+}
+
 function keepPanelInViewport() {
   const observer = new MutationObserver(apply);
   function apply() {
@@ -42,7 +52,7 @@ export function initKiku(config) {
     script.dataset.voice = 'true';
     script.addEventListener('load', () => {
       if (!window.Kiku?.ready) { reject(new Error('Kiku loaded without its setup promise.')); return; }
-      window.Kiku.ready.then(() => { keepPanelInViewport(); return window.Kiku; }).then(resolve, reject);
+      window.Kiku.ready.then(() => { anchorKikuInHeader(); keepPanelInViewport(); return window.Kiku; }).then(resolve, reject);
     }, { once: true });
     script.addEventListener('error', () => reject(new Error('Kiku could not load from the CDN.')), { once: true });
     document.body.append(script);
