@@ -86,6 +86,30 @@ test('groceries can be added to the real shop cart with their seeded prices', as
   assert.equal(cart.total_cents, 799 + 299 + 199);
 });
 
+test('fashion and wall art are catalogued, purchasable, and served with their images', async (t) => {
+  const batches = [];
+  const akropolys = createAkropolys({ siteId: 'test-shop', apiToken: 'public', baseUrl: 'https://shop.example' }, {
+    client: { async ingestBatch(records) { batches.push(records); return { success: true }; } }
+  });
+  const { client, url } = await fixture(t, { akropolys });
+  const request = client();
+  const products = (await request('/api/products')).data;
+  for (const name of ['Blue Check Shirt', 'Retro Trainers', 'Upholstered Sofa', 'Botanical Wall Print']) {
+    const item = products.find(product => product.name === name);
+    assert.ok(item, `${name} is available`);
+    assert.equal((await request('/api/cart/items', 'POST', { product_id: item.id, quantity: 1 })).status, 200);
+    const record = batches[0].find(record => record.title === name);
+    assert.equal(record.fields.product_id, item.id);
+    assert.equal(record.fields.price, item.price_cents / 100);
+    assert.match(record.image, /^https:\/\//);
+  }
+  const cart = (await request('/api/cart')).data;
+  assert.equal(cart.items.length, 4);
+  const image = await fetch(`${url}/images/wall-botanical.svg`);
+  assert.equal(image.status, 200);
+  assert.match(image.headers.get('content-type'), /^image\/svg\+xml/);
+});
+
 test('comments use the authenticated user ID and only the owner or admin can delete them', async (t) => {
   const { client } = await fixture(t);
   const buyer = client();

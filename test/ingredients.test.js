@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { openDatabase } from '../db.js';
+import { lifestyleProducts } from '../lifestyle-products.js';
 
 test('groceries are added once to an existing shop without overwriting its products', (t) => {
   const dir = mkdtempSync(join(tmpdir(), 'shop-food-test-'));
@@ -19,12 +20,14 @@ test('groceries are added once to an existing shop without overwriting its produ
   assert.equal(db.prepare('SELECT description FROM products WHERE id = 2').get().description, 'My own chicken');
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM products WHERE name = 'Chicken Breast'").get().n, 1);
   const before = db.prepare('SELECT COUNT(*) AS n FROM products').get().n;
-  assert.equal(before, 39);
+  assert.equal(before, 39 + lifestyleProducts.length);
   db.prepare("UPDATE products SET name = 'My renamed chicken', active = 0 WHERE id = 2").run();
+  db.prepare("UPDATE products SET active = 0 WHERE name = 'Office Chair'").run();
   db.close();
   db = openDatabase(file);
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM products').get().n, before);
   assert.equal(db.prepare('SELECT active FROM products WHERE id = 2').get().active, 0);
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM products WHERE name = 'Chicken Breast'").get().n, 0);
+  assert.equal(db.prepare("SELECT active FROM products WHERE name = 'Office Chair'").get().active, 0);
   db.close();
 });
