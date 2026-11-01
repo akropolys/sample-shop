@@ -7,7 +7,7 @@ import { createApp, resolveVercelBaseUrl } from '../server.js';
 import { createAkropolys } from '../akropolys.js';
 import { generateKeyPairSync, verify, constants } from 'node:crypto';
 
-async function fixture(t, { payments = true, akropolys = null, akropolysFetch = fetch } = {}) {
+async function fixture(t, { payments = true, akropolys = null } = {}) {
   const db = openDatabase(':memory:');
   const sessions = new Map();
   const calls = [];
@@ -29,7 +29,7 @@ async function fixture(t, { payments = true, akropolys = null, akropolysFetch = 
     } },
     webhooks: verifier.webhooks
   };
-  const app = createApp({ db, stripe: payments ? stripe : null, webhookSecret: 'whsec_test', baseUrl: 'http://localhost:3000', akropolys, akropolysFetch });
+  const app = createApp({ db, stripe: payments ? stripe : null, webhookSecret: 'whsec_test', baseUrl: 'http://localhost:3000', akropolys });
   const server = app.listen(0, '127.0.0.1');
   await once(server, 'listening');
   const url = `http://127.0.0.1:${server.address().port}`;
@@ -333,37 +333,12 @@ test('the loaded catalogue publishes stable IDs, prices, images, and hidden avai
   assert.equal(batches[0].signing.signed, true);
 });
 
-test('the assistant proxy streams responses, forwards shopper proof, and excludes shop cookies', async (t) => {
-  const requests = [];
-  const akropolys = createAkropolys({ siteId: 'test-shop', apiToken: 'public-token', baseUrl: 'http://localhost:3000' });
-  const { client, url } = await fixture(t, { akropolys, akropolysFetch: async (url, options) => {
-    requests.push({ url, options });
-    return new Response('data: The Ceramic Mug is $12.\n\nevent:done\ndata: \n\n', { headers: { 'Content-Type': 'text/event-stream' } });
-  } });
-  const request = client();
-  await request('/api/auth/login', 'POST', { email: 'buyer@example.com', password: 'buyer1234' });
-  const response = await fetch(`${url}/api/akropolys/chat/stream`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Akropolys-Token': 'public-token', 'X-Akropolys-Site': 'test-shop', 'X-Akropolys-Shopper-Proof': 'signed-proof', cookie: 'shop_session=private-session' },
-    body: JSON.stringify({ query: 'Ceramic Mug' })
-  });
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get('content-type'), /text\/event-stream/);
-  assert.match(await response.text(), /Ceramic Mug is \$12/);
-  assert.equal(requests[0].url, 'https://api.akropolys.cloud/v1/chat/stream');
-  assert.equal(requests[0].options.headers['x-akropolys-shopper-proof'], 'signed-proof');
-  assert.equal(requests[0].options.headers.cookie, undefined);
-  assert.equal((await fetch(`${url}/api/akropolys/chat/stream`, { method: 'POST' })).status, 403);
-  assert.equal((await fetch(`${url}/api/akropolys/site-widget?siteId=test-shop`)).status, 200);
-});
-
-test('assistant proxy stays on the visitor origin instead of a protected deployment URL', () => {
+test('browser configuration uses the direct Akropolys API', () => {
   const integration = createAkropolys({
     siteId: 'test-shop', apiToken: 'public-token',
     baseUrl: 'https://protected-deployment.vercel.app',
   });
-  assert.equal(integration.publicConfig.api_url, '/api/akropolys');
-  assert.equal(new URL(integration.publicConfig.api_url, 'https://shop.example').href, 'https://shop.example/api/akropolys');
+  assert.equal(integration.publicConfig.api_url, 'https://api.akropolys.cloud/v1');
 });
 
 

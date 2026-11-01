@@ -65,7 +65,7 @@ AKROPOLYS_PRIVATE_KEY="your-multiline-private-key"
 
 The browser loads the documented versioned script at `https://cdn.akropolys.cloud/kiku/2.2.43/kiku.js` once, waits for its load event, then awaits automatic `Kiku.ready`. The loader supplies its own CSS and runtime. Voice mode is enabled for the sample shop.
 
-Kiku uses the supported `data-api-url` option to send API requests through this shop's `/api/akropolys` route. That route streams requests to the fixed Akropolys API, preserves shopper proofs, and excludes shop cookies. This works around the deployed API's missing `X-Akropolys-Shopper-Proof` CORS allowance. Site actions use the visitor browser and the shop cookies, so local endpoints can run on localhost with the browser-action backend and Kiku build. A small compatibility rule inside the widget's isolated style root uses `overflow: clip` to prevent its fixed panel from scrolling above the viewport when the input receives focus.
+Kiku uses the supported `data-api-url` option to send API requests directly to `https://api.akropolys.cloud/v1`. The API allows the shopper proof, session, and shopper identity headers used by the widget, so no same-origin proxy or raw-body forwarding is needed. Site actions use the visitor browser and the shop cookies, so local endpoints can run on localhost with the browser-action backend and Kiku build. A small compatibility rule inside the widget's isolated style root uses `overflow: clip` to prevent its fixed panel from scrolling above the viewport when the input receives focus.
 
 The existing `/api/products` loading flow publishes its loaded products through `createIngestClient` from `@akropolys/sdk/server` and `ingestBatch(records, signed, { batchSize: 25 })`. Rendering and shop requests do not wait for indexing. This is the only catalogue-publishing path. Batch ingestion needs Growth, Pro, or Business. A rejected submission is logged and appears in the admin's Akropolys status.
 
@@ -118,7 +118,6 @@ Invoke-RestMethod http://localhost:3000/api/cart/items -Method Post -ContentType
 - `db.js`: SQLite tables and initial products/accounts.
 - `cart.js`: server carts using the existing account and guest cookies.
 - `akropolys.js`: signed catalogue batches and shopper proofs.
-- `akropolys-proxy.js`: same-origin requests to the fixed Akropolys API.
 - `site-actions.js`: Shell action definitions and JSON Schemas.
 - `public/`: plain HTML, CSS, JavaScript, and four bundled product photos.
 - `data/shop.sqlite`: the real SQLite database, created automatically on first start.

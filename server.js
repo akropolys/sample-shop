@@ -7,7 +7,6 @@ import { openDatabase, hashPassword, checkPassword } from './db.js';
 import { createAkropolys } from './akropolys.js';
 import { createCartStore } from './cart.js';
 import { siteActions } from './site-actions.js';
-import { akropolysProxy } from './akropolys-proxy.js';
 import { installDemoActions } from './demo-actions.js';
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -37,7 +36,7 @@ function productInput(body) {
   return { name, description, price_cents: body.price_cents, image_url };
 }
 
-export function createApp({ db, stripe = null, stripeMode = 'test', webhookSecret = '', baseUrl = 'http://localhost:3000', akropolys = null, akropolysFetch = fetch }) {
+export function createApp({ db, stripe = null, stripeMode = 'test', webhookSecret = '', baseUrl = 'http://localhost:3000', akropolys = null }) {
   const app = express();
   app.disable('x-powered-by');
   const sessionLength = 7 * 24 * 60 * 60 * 1000;
@@ -62,8 +61,6 @@ export function createApp({ db, stripe = null, stripeMode = 'test', webhookSecre
     }
     next();
   });
-
-  if (akropolys) app.use('/api/akropolys', express.raw({ type: '*/*', limit: '2mb' }), akropolysProxy(akropolys.publicConfig, akropolysFetch));
 
   function settleSession(session) {
     const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(session.metadata?.order_id || '');
