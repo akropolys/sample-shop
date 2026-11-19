@@ -341,6 +341,19 @@ test('browser configuration uses the direct Akropolys API', () => {
   assert.equal(integration.publicConfig.api_url, 'https://api.akropolys.cloud/v1');
 });
 
+test('Akropolys responses allow the CDN and API origins required by Kiku assets', async (t) => {
+  const akropolys = createAkropolys({
+    siteId: 'test-shop', apiToken: 'public-token',
+    baseUrl: 'https://shop.example',
+  });
+  const { url } = await fixture(t, { akropolys });
+  const response = await fetch(`${url}/api/config`);
+  const csp = response.headers.get('content-security-policy');
+  assert.match(csp, /script-src[^;]*https:\/\/cdn\.akropolys\.cloud/);
+  assert.match(csp, /font-src[^;]*https:\/\/cdn\.akropolys\.cloud/);
+  assert.match(csp, /connect-src[^;]*https:\/\/api\.akropolys\.cloud/);
+});
+
 
 test('checkout verification requires the owning browser or account before contacting Stripe', async t => {
   const { client, sessions } = await fixture(t);

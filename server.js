@@ -49,7 +49,7 @@ export function createApp({ db, stripe = null, stripeMode = 'test', webhookSecre
       'X-Content-Type-Options': 'nosniff',
       'Referrer-Policy': 'same-origin',
       'Content-Security-Policy': akropolys
-        ? "default-src 'self'; script-src 'self' https://cdn.akropolys.cloud; style-src 'self' 'unsafe-inline' https://cdn.akropolys.cloud https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' https: data: blob:; connect-src 'self' https://api.akropolys.cloud https://voice.akropolys.cloud wss://voice.akropolys.cloud wss://api.akropolys.cloud; media-src 'self' blob: https://voice.akropolys.cloud; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+        ? "default-src 'self'; script-src 'self' https://cdn.akropolys.cloud; style-src 'self' 'unsafe-inline' https://cdn.akropolys.cloud https://fonts.googleapis.com; font-src 'self' https://cdn.akropolys.cloud https://api.akropolys.cloud https://fonts.gstatic.com data:; img-src 'self' https: data: blob:; connect-src 'self' https://api.akropolys.cloud https://voice.akropolys.cloud wss://voice.akropolys.cloud wss://api.akropolys.cloud; media-src 'self' blob: https://voice.akropolys.cloud; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
         : "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
     });
     if (req.path.startsWith('/api/')) res.set('Cache-Control', 'no-store');
