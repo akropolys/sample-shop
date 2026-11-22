@@ -295,7 +295,6 @@ export function createApp({ db, stripe = null, stripeMode = 'test', webhookSecre
     JOIN users u ON u.id = c.user_id JOIN products p ON p.id = c.product_id ORDER BY c.id DESC LIMIT 200`).all()));
   app.get('/api/admin/orders', requireAdmin, (req, res) => res.json(ordersFor()));
   app.get('/api/admin/users', requireAdmin, (req, res) => res.json(db.prepare('SELECT id, name, email, role, created_at FROM users ORDER BY id').all()));
-  app.get('/api/admin/akropolys', requireAdmin, (req, res) => res.json(akropolys ? akropolys.status() : { enabled: false }));
 
   app.use('/api', (req, res) => res.status(404).json({ error: 'API endpoint not found.' }));
   app.use(express.static(resolve(root, 'public')));

@@ -7,6 +7,7 @@ const productImages = {
   '/images/sneakers.jpg': 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80'
 };
 
+// What kiku knows about each product: the shop chooses these fields.
 export function productRecords(products, baseUrl) {
   return products.map((product) => ({
     id: product.id,
@@ -24,38 +25,18 @@ export function productRecords(products, baseUrl) {
   }));
 }
 
-export function createAkropolys({ siteId, apiToken, privateKey, publicKeyId, baseUrl }, dependencies = {}) {
-  if (!siteId && !apiToken && !privateKey && !publicKeyId) return null;
-  if (!siteId || !apiToken) throw new Error('Akropolys needs both a site ID and public API token.');
-  if (Boolean(privateKey) !== Boolean(publicKeyId)) throw new Error('Akropolys signing needs both the private key and public key ID.');
-  const client = dependencies.client || createIngestClient({ siteId, apiToken, privateKey, kid: publicKeyId, timeoutMs: 60000 });
-  const makeProof = dependencies.signUser || signUser;
-  let queue = Promise.resolve();
-  const status = { site_id: siteId, signed: Boolean(privateKey), last_result: null, last_error: null, pending: 0 };
+// kiku for this shop: the config the page loads it with, the catalogue the
+// shop publishes (signed when a key is set), and the signed-in shopper.
+export function createAkropolys({ siteId, apiToken, privateKey, publicKeyId, baseUrl }, { client } = {}) {
+  if (!siteId || !apiToken) return null;
+  const ingest = client || createIngestClient({ siteId, apiToken, privateKey, kid: publicKeyId, timeoutMs: 60000 });
   return {
     publicConfig: { enabled: true, site_id: siteId, api_token: apiToken, api_url: 'https://api.akropolys.cloud/v1' },
+    publish: (products) => ingest.ingestBatch(productRecords(products, baseUrl), privateKey ? signed : undefined),
     async identity(user) {
       if (!user) return {};
       const shopperId = String(user.id);
-      const identity = { shopperId };
-      if (privateKey) identity.userProof = await makeProof(shopperId, privateKey, { siteId, kid: publicKeyId });
-      return identity;
-    },
-    publish(products) {
-      const records = productRecords(products, baseUrl);
-      status.pending++;
-      const operation = queue.then(() => client.ingestBatch(records, privateKey ? signed : undefined, { batchSize: 25 }));
-      const complete = operation.then((result) => {
-        status.last_result = result;
-        status.last_error = null;
-        return result;
-      }, (error) => {
-        status.last_error = { message: error.message, status: error.status || null };
-        throw error;
-      }).finally(() => { status.pending--; });
-      queue = complete.catch(() => {});
-      return complete;
-    },
-    status: () => ({ ...status })
+      return privateKey ? { shopperId, userProof: await signUser(shopperId, privateKey, { siteId, kid: publicKeyId }) } : { shopperId };
+    }
   };
 }

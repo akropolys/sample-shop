@@ -29,13 +29,9 @@ function table(headers, rows) {
 }
 
 async function loadCms() {
-  const [products, orders, comments, users, akropolys] = await Promise.all([
-    api('/api/admin/products'), api('/api/admin/orders'), api('/api/admin/comments'), api('/api/admin/users'), api('/api/admin/akropolys')
+  const [products, orders, comments, users] = await Promise.all([
+    api('/api/admin/products'), api('/api/admin/orders'), api('/api/admin/comments'), api('/api/admin/users')
   ]);
-  const result = akropolys.last_result;
-  document.querySelector('#akropolys-status').textContent = akropolys.site_id
-    ? `${akropolys.site_id} · ${akropolys.signed ? 'Signed ingestion' : 'Unsigned ingestion'} · ${akropolys.last_error ? akropolys.last_error.message : result ? `${result.indexed || 0} indexed, ${result.updated || 0} updated, ${result.skipped || 0} unchanged, ${result.queued || 0} queued` : 'Open the shop to publish its catalogue.'}`
-    : 'Not configured.';
   const productRows = products.map((product) => {
     const image = el('img', '', 'thumbnail');
     image.src = product.image_url;
