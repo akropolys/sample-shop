@@ -31,4 +31,3 @@ export function announce(message, error = false) {
 }
 
 export const money = (cents) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
-export const date = (value) => new Date(`${value.replace(' ', 'T')}Z`).toLocaleString();

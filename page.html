@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simple Shop</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/shop.js"></script>
+</head>
+<body>
+  <header class="shop-header">
+    <div><a class="brand" href="/">Simple Shop</a><span class="muted"> A kiku demo store</span></div>
+    <kiku-button id="kiku-header" label="Ask about products"></kiku-button>
+  </header>
+  <main>
+    <div id="message" class="notice" role="status" hidden></div>
+    <div class="intro"><h1>Everyday things.</h1><p>Browse, ask kiku anything, and fill your cart.</p></div>
+    <div class="shop-layout">
+      <section aria-labelledby="products-heading">
+        <h2 id="products-heading">Products</h2>
+        <div id="products" class="products"><p>Loading products…</p></div>
+      </section>
+      <aside class="panel cart" aria-labelledby="cart-heading">
+        <h2 id="cart-heading">Your cart <span id="cart-count" class="muted">(0)</span></h2>
+        <div id="cart-items"></div>
+        <div class="total"><span>Total</span><strong id="cart-total">$0.00</strong></div>
+      </aside>
+    </div>
+  </main>
+  <footer>Simple Shop · Demo products · Prices in USD</footer>
+
+  <script src="https://cdn.akropolys.cloud/kiku/2.2.46/kiku.js"
+          data-key="KIKU_PUBLIC_KEY" data-site-id="KIKU_SITE_ID" data-voice="true" data-vision="true" defer></script>
+</body>
+</html>
