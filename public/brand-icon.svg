@@ -1,2 +1,19 @@
-<!-- "shopping-bag" from Lucide (https://lucide.dev), ISC License, Copyright (c) Lucide Contributors -->
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2f6f4f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Simple Shop logo mark: a green tile with a shopping bag and a wedge of cheese -->
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3f9467"/>
+      <stop offset="1" stop-color="#2a6e4b"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#tile)"/>
+  <!-- bag -->
+  <path d="M17 24h30l-2.6 24.2A4 4 0 0 1 40.4 52H23.6a4 4 0 0 1-4-3.8z" fill="#fdf6e9"/>
+  <path d="M24.5 24v-3.5a7.5 7.5 0 0 1 15 0V24" fill="none" stroke="#fdf6e9" stroke-width="3.6" stroke-linecap="round"/>
+  <!-- cheese wedge on the bag -->
+  <path d="M23 45.5 41 36.5v9z" fill="#f4b840"/>
+  <path d="M23 45.5 41 36.5l-4.2-2.4z" fill="#f9d36e"/>
+  <circle cx="33.2" cy="42.6" r="1.6" fill="#e39a22"/>
+  <circle cx="37.8" cy="41.2" r="1.1" fill="#e39a22"/>
+  <circle cx="29" cy="44.4" r="1" fill="#e39a22"/>
+</svg>
