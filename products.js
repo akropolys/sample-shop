@@ -11,6 +11,7 @@ const everyday = [
 ];
 
 // Keep this order: kiku stores each product under its ID.
-export const products = [...everyday, ...ingredients, ...lifestyleProducts].map((product, index) => ({ id: index + 1, ...product }));
+// Test pricing: every product costs $1, to match the $1 test checkout.
+export const products = [...everyday, ...ingredients, ...lifestyleProducts].map((product, index) => ({ id: index + 1, ...product, price_cents: 100 }));
 
 export const productById = (id) => products.find((product) => product.id === id);

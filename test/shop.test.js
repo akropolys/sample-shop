@@ -45,7 +45,7 @@ test('the cart lives in the visitor’s cookie', async (t) => {
   await visitor('/api/cart/items', 'POST', { product_id: 2, quantity: 1 });
   let cart = (await visitor('/api/cart/items', 'POST', { product_id: 2, quantity: 2 })).data;
   assert.equal(cart.items[0].quantity, 3);
-  assert.equal(cart.total_cents, 3 * 1200);
+  assert.equal(cart.total_cents, 3 * 100);
   cart = (await visitor('/api/cart/items/2', 'PATCH', { quantity: 5 })).data;
   assert.equal(cart.count, 5);
   await visitor('/api/cart/items', 'POST', { product_id: 5, quantity: 1 });
