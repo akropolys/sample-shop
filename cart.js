@@ -4,7 +4,7 @@ const COOKIE = 'shop_cart';
 const fail = (status, message) => { throw Object.assign(new Error(message), { status }); };
 
 // The cart lives in the visitor's cookie as { productId: quantity }.
-function load(req) {
+export function load(req) {
   const raw = (req.headers.cookie || '').split(';').map((part) => part.trim()).find((part) => part.startsWith(`${COOKIE}=`));
   try {
     const items = JSON.parse(decodeURIComponent(raw.slice(COOKIE.length + 1)));
@@ -14,7 +14,7 @@ function load(req) {
   }
 }
 
-function view(items) {
+export function view(items) {
   const lines = Object.entries(items).map(([id, quantity]) => {
     const product = productById(Number(id));
     return { product_id: product.id, name: product.name, price_cents: product.price_cents, image_url: product.image_url, quantity, line_total_cents: product.price_cents * quantity };

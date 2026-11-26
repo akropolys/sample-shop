@@ -5,10 +5,11 @@ import { dirname, resolve } from 'node:path';
 import { products } from './products.js';
 import { cartRoutes } from './cart.js';
 import { siteActions } from './site-actions.js';
+import { checkoutRoutes, polarConfig } from './checkout.js';
 
 const root = dirname(fileURLToPath(import.meta.url));
 
-export function createApp({ baseUrl = 'http://localhost:3000' } = {}) {
+export function createApp({ baseUrl = 'http://localhost:3000', polar = polarConfig(), fetchImpl = fetch } = {}) {
   const app = express();
   app.disable('x-powered-by');
   app.use(express.json({ limit: '20kb' }));
@@ -17,6 +18,7 @@ export function createApp({ baseUrl = 'http://localhost:3000' } = {}) {
   app.get('/api/products', (req, res) => res.json(products));
   app.get('/api/actions', (req, res) => res.json({ actions: siteActions(baseUrl) }));
   cartRoutes(app, baseUrl.startsWith('https:'));
+  checkoutRoutes(app, { baseUrl, secure: baseUrl.startsWith('https:'), config: polar, fetchImpl });
 
   app.use('/api', (req, res) => res.status(404).json({ error: 'API endpoint not found.' }));
   // The page's kiku key comes from the environment, so it stays out of git.
